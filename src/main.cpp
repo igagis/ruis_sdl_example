@@ -333,25 +333,20 @@ int main( int argc, char* args[] ) {
 	}
 	
 	//create morda singleton
-	class SDLMorda : public morda::Morda{
-	public:
-		const Uint32 userEventType;
-		
-		SDLMorda(Uint32 userEventType) :
-				morda::Morda(std::make_shared<mordaren::OpenGL2Renderer>(), 96, 1),
-				userEventType(userEventType)
-		{}
-				
-		void postToUiThread_ts(std::function<void()>&& f)override{
-			SDL_Event e;
-			SDL_memset(&e, 0, sizeof(e));
-			e.type = this->userEventType;
-			e.user.code = 0;
-			e.user.data1 = new std::function<void()>(std::move(f));
-			e.user.data2 = 0;
-			SDL_PushEvent(&e);
-		}
-	} sdlMorda(userEventType);
+	morda::Morda sdlMorda(
+			std::make_shared<mordaren::OpenGL2Renderer>(),
+			96,
+			1,
+			[userEventType](std::function<void()>&& f){
+				SDL_Event e;
+				SDL_memset(&e, 0, sizeof(e));
+				e.type = userEventType;
+				e.user.code = 0;
+				e.user.data1 = new std::function<void()>(std::move(f));
+				e.user.data2 = 0;
+				SDL_PushEvent(&e);
+			}
+		);
 	
 	morda::Morda::inst().setViewportSize(morda::Vec2r(morda::real(width), morda::real(height)));
 	
@@ -368,10 +363,10 @@ int main( int argc, char* args[] ) {
 		//set the widgets hierarchy to the application
 		morda::Morda::inst().setRootWidget(c);
 
-		auto textLabel = c->findChildByNameAs<morda::Text>("info_text");
+		auto textLabel = c->findByNameAs<morda::Text>("info_text");
 		ASSERT(textLabel)
 
-		auto button = c->findChildByNameAs<morda::PushButton>("hw_button");
+		auto button = c->findByNameAs<morda::PushButton>("hw_button");
 
 		auto textLabelWeak = utki::makeWeak(textLabel);//make a weak pointer to the TextLabel widget.
 
@@ -387,7 +382,7 @@ int main( int argc, char* args[] ) {
 					tl->setText("odd");
 				}
 			}
-			morda::Morda::inst().postToUiThread_ts([](){
+			morda::Morda::inst().postToUiThread([](){
 				std::cout << "Hello from UI thread!" << std::endl;
 			});
 		};
@@ -458,7 +453,7 @@ int main( int argc, char* args[] ) {
 						}
 					} sdlUnicodeProvider(e.text.text); //save pointer to text, the ownership of text buffer is not taken!!!
 					morda::Morda::inst().onCharacterInput(sdlUnicodeProvider, morda::Key_e::UNKNOWN);
-				}else if(e.type == sdlMorda.userEventType){
+				}else if(e.type == userEventType){
 					std::unique_ptr<std::function<void()>> f(reinterpret_cast<std::function<void()>*>(e.user.data1));
 					f->operator ()();
 				}
