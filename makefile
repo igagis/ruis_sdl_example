@@ -1,12 +1,12 @@
 include prorab.mk
 
-this_name := sdl2example
+this_name := sdl2_example
 
 
 this_srcs := src/main.cpp
 
 
-this_cxxflags := -Wall
+this_cxxflags += -Wall
 this_cxxflags += -Wno-comment #no warnings on nested comments
 this_cxxflags += -Wno-format
 this_cxxflags += -DDEBUG
@@ -36,6 +36,8 @@ else ifeq ($(prorab_os),linux)
     this_ldlibs += -lGLEW -pthread -lGL -lSDL2
 endif
 
-this_ldlibs += -lmorda -lmorda-opengl2-ren -lstob -lpapki -lunikod -lstdc++
+this_ldlibs += -lmorda -lmorda-opengl2-ren -lpuu -lpapki -lunikod -lstdc++
+
+this_out_dir := build
 
 $(eval $(prorab-build-app))
