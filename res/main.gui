@@ -1,17 +1,17 @@
-Pile{
-	Column{
-		PushButton{
+@pile{
+	@column{
+		@PushButton{
 			id{hw_button} // we can find this button by id from code
-			Text{
+			@text{
 				text{"Hello world!!!"}
 			}
 		}
 
-		Text{
+		@text{
 			id{info_text} // we can find this label by id from code
 			text{Information}
 		}
-		TextInputLine{
+		@text_input_line{
 			layout{
 				dx{200}
 			}
