@@ -364,12 +364,12 @@ int main( int argc, char* args[] ) {
 		//set the widgets hierarchy to the application
 		gui.setRootWidget(c);
 
-		auto textLabel = c->findByNameAs<morda::Text>("info_text");
+		auto textLabel = c->try_get_widget_as<morda::Text>("info_text");
 		ASSERT(textLabel)
 
-		auto button = c->findByNameAs<morda::PushButton>("hw_button");
+		auto button = c->try_get_widget_as<morda::PushButton>("hw_button");
 
-		auto textLabelWeak = utki::makeWeak(textLabel);//make a weak pointer to the TextLabel widget.
+		auto textLabelWeak = utki::make_weak(textLabel);//make a weak pointer to the TextLabel widget.
 
 		bool even = true;
 

@@ -1,6 +1,6 @@
 @pile{
 	@column{
-		@PushButton{
+		@push_button{
 			id{hw_button} // we can find this button by id from code
 			@text{
 				text{"Hello world!!!"}
