@@ -12,9 +12,9 @@
 
 #include <morda/gui.hpp>
 #include <mordaren/OpenGL2Renderer.hpp>
-#include <morda/widgets/label/Text.hpp>
-#include <morda/widgets/button/Button.hpp>
-#include <morda/widgets/button/PushButton.hpp>
+#include <morda/widgets/label/text.hpp>
+#include <morda/widgets/button/button.hpp>
+#include <morda/widgets/button/push_button.hpp>
 
 
 int width = 640;
@@ -349,7 +349,7 @@ int main( int argc, char* args[] ) {
 			1
 		);
 	
-	gui.setViewportSize(morda::Vec2r(morda::real(width), morda::real(height)));
+	gui.set_viewport(morda::vector2(morda::real(width), morda::real(height)));
 	
 	papki::fs_file fi;
 
@@ -358,29 +358,29 @@ int main( int argc, char* args[] ) {
 	
 	// Inflate widgets hierarchy from GUI description script and set it up
 	{
-		fi.setPath("res/main.gui");
+		fi.set_path("res/main.gui");
 		auto c = gui.context->inflater.inflate(fi);
 
-		//set the widgets hierarchy to the application
-		gui.setRootWidget(c);
+		// set the widgets hierarchy to the application
+		gui.set_root(c);
 
-		auto textLabel = c->try_get_widget_as<morda::Text>("info_text");
+		auto textLabel = c->try_get_widget_as<morda::text>("info_text");
 		ASSERT(textLabel)
 
-		auto button = c->try_get_widget_as<morda::PushButton>("hw_button");
+		auto button = c->try_get_widget_as<morda::push_button>("hw_button");
 
 		auto textLabelWeak = utki::make_weak(textLabel);//make a weak pointer to the TextLabel widget.
 
 		bool even = true;
 
 		// connect some action on button click
-		button->clicked = [textLabelWeak, even](morda::PushButton& b) mutable {
+		button->click_handler = [textLabelWeak, even](morda::push_button& b)mutable{
 			if(auto tl = textLabelWeak.lock()){
 				even = !even;
 				if(even){
-					tl->setText("even");
+					tl->set_text("even");
 				}else{
-					tl->setText("odd");
+					tl->set_text("odd");
 				}
 			}
 			b.context->run_from_ui_thread([](){
@@ -406,45 +406,45 @@ int main( int argc, char* args[] ) {
 							width = e.window.data1;
 							height = e.window.data2;
 //							std::cout << "w = " << e.window.data1 << " h = " << e.window.data2 << std::endl;
-							gui.setViewportSize(morda::Vec2r(morda::real(width), morda::real(height)));
+							gui.set_viewport(morda::vector2(morda::real(width), morda::real(height)));
 							glViewport(0, 0, width, height);
 							break;
 						case SDL_WINDOWEVENT_ENTER:
-							gui.onMouseHover(true, 0);
+							gui.send_mouse_hover(true, 0);
 							break;
 						case SDL_WINDOWEVENT_LEAVE:
-							gui.onMouseHover(false, 0);
+							gui.send_mouse_hover(false, 0);
 							break;
 					}
 				}else if(e.type == SDL_MOUSEMOTION){
 					int x = 0, y = 0;
 					SDL_GetMouseState(&x, &y);
 
-					gui.onMouseMove(morda::Vec2r(morda::real(x), morda::real(y)), 0);
+					gui.send_mouse_move(morda::vector2(morda::real(x), morda::real(y)), 0);
 				}else if(e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP){
 					int x = 0, y = 0;
 					SDL_GetMouseState(&x, &y);
 
-					gui.onMouseButton(
+					gui.send_mouse_button(
 							e.button.type == SDL_MOUSEBUTTONDOWN,
-							morda::Vec2r(morda::real(x), morda::real(y)),
-							e.button.button == 1 ? morda::MouseButton_e::LEFT : morda::MouseButton_e::RIGHT,
+							morda::vector2(morda::real(x), morda::real(y)),
+							e.button.button == 1 ? morda::mouse_button::left : morda::mouse_button::right,
 							0
 						);
 				}else if(e.type == SDL_KEYDOWN || e.type == SDL_KEYUP){
 					if(e.key.repeat == 0){
-						gui.onKeyEvent(e.key.type == SDL_KEYDOWN, sdlScancodeToMordaKey(e.key.keysym.scancode));
+						gui.send_key(e.key.type == SDL_KEYDOWN, sdlScancodeToMordaKey(e.key.keysym.scancode));
 					}
 					if(e.type == SDL_KEYDOWN){
-						struct SDLUnicodeDummyProvider : public morda::gui::UnicodeProvider{
+						struct SDLUnicodeDummyProvider : public morda::gui::unicode_provider{
 							std::u32string get()const override{
 								return std::u32string();
 							}
 						};
-						gui.onCharacterInput(SDLUnicodeDummyProvider(), sdlScancodeToMordaKey(e.key.keysym.scancode));
+						gui.send_character_input(SDLUnicodeDummyProvider(), sdlScancodeToMordaKey(e.key.keysym.scancode));
 					}
 				}else if( e.type == SDL_TEXTINPUT ) {
-					struct SDLUnicodeProvider : public morda::gui::UnicodeProvider{
+					struct SDLUnicodeProvider : public morda::gui::unicode_provider{
 						char* text;
 						SDLUnicodeProvider(char* text) :
 								text(text)
@@ -452,8 +452,8 @@ int main( int argc, char* args[] ) {
 						std::u32string get()const override{
 							return unikod::toUtf32(this->text);
 						}
-					} sdlUnicodeProvider(e.text.text); //save pointer to text, the ownership of text buffer is not taken!!!
-					gui.onCharacterInput(sdlUnicodeProvider, morda::key::unknown);
+					} sdlUnicodeProvider(e.text.text); // save pointer to text, the ownership of text buffer is not taken!!!
+					gui.send_character_input(sdlUnicodeProvider, morda::key::unknown);
 				}else if(e.type == userEventType){
 					std::unique_ptr<std::function<void()>> f(reinterpret_cast<std::function<void()>*>(e.user.data1));
 					f->operator ()();

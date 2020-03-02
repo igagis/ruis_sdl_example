@@ -7,13 +7,13 @@ this_srcs := src/main.cpp
 
 
 this_cxxflags += -Wall
-this_cxxflags += -Wno-comment #no warnings on nested comments
+this_cxxflags += -Wno-comment # no warnings on nested comments
 this_cxxflags += -Wno-format
 this_cxxflags += -DDEBUG
-this_cxxflags += -fstrict-aliasing #strict aliasing!!!
+this_cxxflags += -fstrict-aliasing
 this_cxxflags += -g
 this_cxxflags += -O2
-this_cxxflags += -std=c++11
+this_cxxflags += -std=c++14
 
 
 ifeq ($(debug), true)
@@ -21,15 +21,7 @@ ifeq ($(debug), true)
 endif
 
 ifeq ($(prorab_os),windows)
-    #this_ldlibs += -lmingw32 #these should go first, otherwise linker will complain about undefined reference to WinMain
-#    this_ldlibs += $(prorab_this_dir)../../src/libmorda$(prorab_lib_extension)
-    #this_ldflags += -L/usr/lib -L/usr/local/lib
-    #this_ldlibs +=  -lglew32 -lopengl32 -lpng -ljpeg -lz -lfreetype -mwindows
-
-    #this_cxxflags += -I/usr/include -I/usr/local/include
-
-    #WORKAROUND for MinGW bug:
-    #this_cxxflags += -D__STDC_FORMAT_MACROS
+    
 else ifeq ($(prorab_os),macosx)
     this_ldlibs += `pkg-config --libs sdl2 glew` -framework OpenGL # -framework Cocoa
 else ifeq ($(prorab_os),linux)
