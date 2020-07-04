@@ -8,14 +8,15 @@
 
 #include <GL/glew.h>
 
-#include <papki/FSFile.hpp>
+#include <papki/fs_file.hpp>
+
+#include <utki/utf8.hpp>
 
 #include <morda/gui.hpp>
-#include <mordaren/OpenGL2Renderer.hpp>
+#include <morda/render/opengl2/renderer.hpp>
 #include <morda/widgets/label/text.hpp>
 #include <morda/widgets/button/button.hpp>
 #include <morda/widgets/button/push_button.hpp>
-
 
 int width = 640;
 int height = 480;
@@ -334,7 +335,7 @@ int main( int argc, char* args[] ) {
 	
 	//create morda singleton
 	morda::gui gui(
-			std::make_shared<mordaren::OpenGL2Renderer>(),
+			std::make_shared<morda::render_opengl2::renderer>(),
 			std::make_shared<morda::updater>(),
 			[userEventType](std::function<void()>&& f){
 				SDL_Event e;
@@ -450,7 +451,7 @@ int main( int argc, char* args[] ) {
 								text(text)
 						{}
 						std::u32string get()const override{
-							return unikod::toUtf32(this->text);
+							return utki::to_utf32(this->text);
 						}
 					} sdlUnicodeProvider(e.text.text); // save pointer to text, the ownership of text buffer is not taken!!!
 					gui.send_character_input(sdlUnicodeProvider, morda::key::unknown);
