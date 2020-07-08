@@ -10,7 +10,7 @@
 
 #include <papki/fs_file.hpp>
 
-#include <utki/utf8.hpp>
+#include <utki/unicode.hpp>
 
 #include <morda/gui.hpp>
 #include <morda/render/opengl2/renderer.hpp>
