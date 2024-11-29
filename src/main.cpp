@@ -16,6 +16,7 @@
 #include <ruis/render/opengl/renderer.hpp>
 #include <ruis/widget/label/text.hpp>
 #include <ruis/widget/button/push_button.hpp>
+#include <ruis/widget/label/rectangle.hpp>
 
 int width = 640;
 int height = 480;
@@ -293,8 +294,12 @@ int main( int argc, char* args[] ) {
 		printf( "SDL could not initialize! SDL_Error: %s\n", SDL_GetError() ); 
 		return 1;
 	}
+
+	utki::scope_exit sdl_scope_exit([](){
+		SDL_Quit();
+	});
 	
-	//Use OpenGL 2.0
+	// use OpenGL 2.0
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 2 ); 
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 0 );
 	
@@ -308,27 +313,29 @@ int main( int argc, char* args[] ) {
 		); 
 	if( window == NULL ) { 
 		printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() ); 
-		SDL_Quit();
 		return 1;
 	}
 	
+	utki::scope_exit window_scope_exit([&window](){
+		SDL_DestroyWindow(window);
+	});
+
 	SDL_GLContext gContext = SDL_GL_CreateContext( window );
 	if( gContext == NULL ) {
 		printf( "OpenGL context could not be created! SDL Error: %s\n", SDL_GetError() );
-		SDL_DestroyWindow( window ); 
-		SDL_Quit();
+		return 1;
 	}
+
+	utki::scope_exit gl_scope_exit([&gContext](){
+		SDL_GL_DeleteContext(gContext);
+	});
 	
 	if(glewInit() != GLEW_OK){
-		SDL_DestroyWindow( window ); 
-		SDL_Quit();
 		return 1;
 	}
 	
 	Uint32 userEventType = SDL_RegisterEvents(1);
 	if(userEventType == ((Uint32)-1)){
-		SDL_DestroyWindow( window ); 
-		SDL_Quit();
 		return 1;
 	}
 	
@@ -353,11 +360,27 @@ int main( int argc, char* args[] ) {
 	);
 	
 	gui.set_viewport(ruis::vector2(ruis::real(width), ruis::real(height)));
+	gui.context.get().renderer.get().set_viewport(
+		{{0, 0}, {unsigned(width), unsigned(height)}}
+	);
 	
 	papki::fs_file fi;
 
 	gui.init_standard_widgets(fi);
 	
+	{
+		// namespace m = ruis::make;
+		// gui.set_root(
+		// 	m::rectangle(gui.context,
+		// 		{
+		// 			.color_params{
+		// 				.color = 0xff00ff00
+		// 			}
+		// 		}
+		// 	)
+		// );
+	}
+
 	
 	// Inflate widgets hierarchy from GUI description script and set it up
 	{
@@ -392,7 +415,11 @@ int main( int argc, char* args[] ) {
 		};
 	}
 	
-	SDL_StartTextInput(); 
+	SDL_StartTextInput();
+
+	utki::scope_exit text_input_scope_exit([](){
+		SDL_StopTextInput();
+	});
 
 	for(bool quit = false; !quit;) { 
 		if(SDL_WaitEventTimeout(nullptr, gui.update()) == 1){
@@ -408,9 +435,12 @@ int main( int argc, char* args[] ) {
 						case SDL_WINDOWEVENT_SIZE_CHANGED:
 							width = e.window.data1;
 							height = e.window.data2;
-//							std::cout << "w = " << e.window.data1 << " h = " << e.window.data2 << std::endl;
+							// std::cout << "w = " << e.window.data1 << " h = " << e.window.data2 << std::endl;
 							gui.set_viewport(ruis::vector2(ruis::real(width), ruis::real(height)));
-							glViewport(0, 0, width, height);
+							gui.context.get().renderer.get().set_viewport(
+								{{0, 0}, {unsigned(width), unsigned(height)}}
+							);
+							// glViewport(0, 0, width, height);
 							break;
 						case SDL_WINDOWEVENT_ENTER:
 							gui.send_mouse_hover(true, 0);
@@ -463,22 +493,12 @@ int main( int argc, char* args[] ) {
 				}
 			}
 		}
-		
-		glClearColor( 0.5f, 0.5f, 0.5f, 1.f );
-		glClear( GL_COLOR_BUFFER_BIT );
-		
-		gui.render();
-		
-		SDL_GL_SwapWindow( window ); 
-	} 
-	
-	SDL_StopTextInput();
 
-	SDL_GL_DeleteContext(gContext);
-	
-	SDL_DestroyWindow( window ); 
-	
-	SDL_Quit();
+		gui.context.get().renderer.get().clear_framebuffer_color();
+		gui.render(gui.context.get().renderer.get().initial_matrix);
+		
+		SDL_GL_SwapWindow(window); 
+	} 
 	
 	return 0;
 }
