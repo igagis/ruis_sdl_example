@@ -1,6 +1,6 @@
 #include <utki/config.hpp>
 
-#if M_COMPILER == M_COMPILER_MSVC
+#if CFG_COMPILER == CFG_COMPILER_MSVC
 #	include <SDL.h>
 #else
 #	include <SDL2/SDL.h>
@@ -12,277 +12,276 @@
 
 #include <utki/unicode.hpp>
 
-#include <morda/gui.hpp>
-#include <morda/render/opengl2/renderer.hpp>
-#include <morda/widgets/label/text.hpp>
-#include <morda/widgets/button/button.hpp>
-#include <morda/widgets/button/push_button.hpp>
+#include <ruis/gui.hpp>
+#include <ruis/render/opengl/renderer.hpp>
+#include <ruis/widget/label/text.hpp>
+#include <ruis/widget/button/push_button.hpp>
 
 int width = 640;
 int height = 480;
 
-std::array<morda::key, 0x100> keyMap = {{
-	morda::key::unknown, // 0
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::a,
-	morda::key::b, // x5
-	morda::key::c,
-	morda::key::d,
-	morda::key::e,
-	morda::key::f,
-	morda::key::g, // 10
-	morda::key::h,
-	morda::key::i,
-	morda::key::j,
-	morda::key::k,
-	morda::key::l, // x5
-	morda::key::m,
-	morda::key::n,
-	morda::key::o,
-	morda::key::p,
-	morda::key::q, // 20
-	morda::key::r,
-	morda::key::s,
-	morda::key::t,
-	morda::key::u,
-	morda::key::v, // x5
-	morda::key::w,
-	morda::key::x,
-	morda::key::y,
-	morda::key::z,
-	morda::key::one, // 30
-	morda::key::two,
-	morda::key::three,
-	morda::key::four,
-	morda::key::five,
-	morda::key::six, // x5
-	morda::key::seven,
-	morda::key::eight,
-	morda::key::nine,
-	morda::key::zero,
-	morda::key::enter, // 40
-	morda::key::escape,
-	morda::key::backspace,
-	morda::key::tabulator,
-	morda::key::space,
-	morda::key::minus, // x5
-	morda::key::equals,
-	morda::key::left_square_bracket,
-	morda::key::right_square_bracket,
-	morda::key::backslash,
-	morda::key::backslash, // 50
-	morda::key::semicolon,
-	morda::key::apostrophe,
-	morda::key::grave,
-	morda::key::comma,
-	morda::key::period, // x5
-	morda::key::slash,
-	morda::key::capslock,
-	morda::key::f1,
-	morda::key::f2,
-	morda::key::f3, // 60
-	morda::key::f4,
-	morda::key::f5,
-	morda::key::f6,
-	morda::key::f7,
-	morda::key::f8, // x5
-	morda::key::f9,
-	morda::key::f10,
-	morda::key::f11,
-	morda::key::f12,
-	morda::key::print_screen, // 70
-	morda::key::unknown,
-	morda::key::pause,
-	morda::key::insert,
-	morda::key::home,
-	morda::key::page_up, // x5
-	morda::key::deletion,
-	morda::key::end,
-	morda::key::page_down,
-	morda::key::right,
-	morda::key::left,    // 80
-	morda::key::down,
-	morda::key::up,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 90
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 100
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::f13,
-	morda::key::f14, // x5
-	morda::key::f15,
-	morda::key::f16,
-	morda::key::f17,
-	morda::key::f18,
-	morda::key::f19, // 110
-	morda::key::f20,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 120
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 130
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 140
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 150
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 160
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 170
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 180
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 190
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 200
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 210
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 220
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::left_control,
-	morda::key::left_shift, // x5
-	morda::key::left_alt,
-	morda::key::unknown,
-	morda::key::right_control,
-	morda::key::right_shift,
-	morda::key::right_alt, // 230
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 240
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // x5
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown, // 250
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown,
-	morda::key::unknown  // 255
+std::array<ruis::key, 0x100> keyMap = {{
+	ruis::key::unknown, // 0
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::a,
+	ruis::key::b, // x5
+	ruis::key::c,
+	ruis::key::d,
+	ruis::key::e,
+	ruis::key::f,
+	ruis::key::g, // 10
+	ruis::key::h,
+	ruis::key::i,
+	ruis::key::j,
+	ruis::key::k,
+	ruis::key::l, // x5
+	ruis::key::m,
+	ruis::key::n,
+	ruis::key::o,
+	ruis::key::p,
+	ruis::key::q, // 20
+	ruis::key::r,
+	ruis::key::s,
+	ruis::key::t,
+	ruis::key::u,
+	ruis::key::v, // x5
+	ruis::key::w,
+	ruis::key::x,
+	ruis::key::y,
+	ruis::key::z,
+	ruis::key::one, // 30
+	ruis::key::two,
+	ruis::key::three,
+	ruis::key::four,
+	ruis::key::five,
+	ruis::key::six, // x5
+	ruis::key::seven,
+	ruis::key::eight,
+	ruis::key::nine,
+	ruis::key::zero,
+	ruis::key::enter, // 40
+	ruis::key::escape,
+	ruis::key::backspace,
+	ruis::key::tabulator,
+	ruis::key::space,
+	ruis::key::minus, // x5
+	ruis::key::equals,
+	ruis::key::left_square_bracket,
+	ruis::key::right_square_bracket,
+	ruis::key::backslash,
+	ruis::key::backslash, // 50
+	ruis::key::semicolon,
+	ruis::key::apostrophe,
+	ruis::key::grave,
+	ruis::key::comma,
+	ruis::key::period, // x5
+	ruis::key::slash,
+	ruis::key::capslock,
+	ruis::key::f1,
+	ruis::key::f2,
+	ruis::key::f3, // 60
+	ruis::key::f4,
+	ruis::key::f5,
+	ruis::key::f6,
+	ruis::key::f7,
+	ruis::key::f8, // x5
+	ruis::key::f9,
+	ruis::key::f10,
+	ruis::key::f11,
+	ruis::key::f12,
+	ruis::key::print_screen, // 70
+	ruis::key::unknown,
+	ruis::key::pause,
+	ruis::key::insert,
+	ruis::key::home,
+	ruis::key::page_up, // x5
+	ruis::key::deletion,
+	ruis::key::end,
+	ruis::key::page_down,
+	ruis::key::arrow_right,
+	ruis::key::arrow_left,    // 80
+	ruis::key::arrow_down,
+	ruis::key::arrow_up,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 90
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 100
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::f13,
+	ruis::key::f14, // x5
+	ruis::key::f15,
+	ruis::key::f16,
+	ruis::key::f17,
+	ruis::key::f18,
+	ruis::key::f19, // 110
+	ruis::key::f20,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 120
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 130
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 140
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 150
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 160
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 170
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 180
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 190
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 200
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 210
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 220
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::left_control,
+	ruis::key::left_shift, // x5
+	ruis::key::left_alt,
+	ruis::key::unknown,
+	ruis::key::right_control,
+	ruis::key::right_shift,
+	ruis::key::right_alt, // 230
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 240
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // x5
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown, // 250
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown,
+	ruis::key::unknown  // 255
 }};
 
-morda::key sdlScancodeToMordaKey(SDL_Scancode sc){
+ruis::key sdlScancodeToMordaKey(SDL_Scancode sc){
 	if(size_t(sc) >= keyMap.size()){
-		return morda::key::unknown;
+		return ruis::key::unknown;
 	}
 	
 	return keyMap[sc];
@@ -333,10 +332,11 @@ int main( int argc, char* args[] ) {
 		return 1;
 	}
 	
-	//create morda singleton
-	morda::gui gui(
-			std::make_shared<morda::render_opengl2::renderer>(),
-			std::make_shared<morda::updater>(),
+	// create ruis gui singleton
+	ruis::gui gui(
+		utki::make_shared<ruis::context>(
+			utki ::make_shared<ruis::render::opengl::renderer>(),
+			utki::make_shared<ruis::updater>(),
 			[userEventType](std::function<void()>&& f){
 				SDL_Event e;
 				SDL_memset(&e, 0, sizeof(e));
@@ -346,36 +346,38 @@ int main( int argc, char* args[] ) {
 				e.user.data2 = 0;
 				SDL_PushEvent(&e);
 			},
+			[](ruis::mouse_cursor){},
 			96,
 			1
-		);
+		)
+	);
 	
-	gui.set_viewport(morda::vector2(morda::real(width), morda::real(height)));
+	gui.set_viewport(ruis::vector2(ruis::real(width), ruis::real(height)));
 	
 	papki::fs_file fi;
 
-	gui.initStandardWidgets(fi);
+	gui.init_standard_widgets(fi);
 	
 	
 	// Inflate widgets hierarchy from GUI description script and set it up
 	{
 		fi.set_path("res/main.gui");
-		auto c = gui.context->inflater.inflate(fi);
+		auto c = gui.context.get().inflater.inflate(fi);
 
 		// set the widgets hierarchy to the application
 		gui.set_root(c);
 
-		auto textLabel = c->try_get_widget_as<morda::text>("info_text");
+		auto textLabel = c.get().try_get_widget_as<ruis::text>("info_text");
 		ASSERT(textLabel)
 
-		auto button = c->try_get_widget_as<morda::push_button>("hw_button");
+		auto button = c.get().try_get_widget_as<ruis::push_button>("hw_button");
 
 		auto textLabelWeak = utki::make_weak(textLabel);//make a weak pointer to the TextLabel widget.
 
 		bool even = true;
 
 		// connect some action on button click
-		button->click_handler = [textLabelWeak, even](morda::push_button& b)mutable{
+		button->click_handler = [textLabelWeak, even](ruis::push_button& b)mutable{
 			if(auto tl = textLabelWeak.lock()){
 				even = !even;
 				if(even){
@@ -384,7 +386,7 @@ int main( int argc, char* args[] ) {
 					tl->set_text("odd");
 				}
 			}
-			b.context->run_from_ui_thread([](){
+			b.context.get().run_from_ui_thread([](){
 				std::cout << "Hello from UI thread!" << std::endl;
 			});
 		};
@@ -407,7 +409,7 @@ int main( int argc, char* args[] ) {
 							width = e.window.data1;
 							height = e.window.data2;
 //							std::cout << "w = " << e.window.data1 << " h = " << e.window.data2 << std::endl;
-							gui.set_viewport(morda::vector2(morda::real(width), morda::real(height)));
+							gui.set_viewport(ruis::vector2(ruis::real(width), ruis::real(height)));
 							glViewport(0, 0, width, height);
 							break;
 						case SDL_WINDOWEVENT_ENTER:
@@ -421,15 +423,15 @@ int main( int argc, char* args[] ) {
 					int x = 0, y = 0;
 					SDL_GetMouseState(&x, &y);
 
-					gui.send_mouse_move(morda::vector2(morda::real(x), morda::real(y)), 0);
+					gui.send_mouse_move(ruis::vector2(ruis::real(x), ruis::real(y)), 0);
 				}else if(e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_MOUSEBUTTONUP){
 					int x = 0, y = 0;
 					SDL_GetMouseState(&x, &y);
 
 					gui.send_mouse_button(
 							e.button.type == SDL_MOUSEBUTTONDOWN,
-							morda::vector2(morda::real(x), morda::real(y)),
-							e.button.button == 1 ? morda::mouse_button::left : morda::mouse_button::right,
+							ruis::vector2(ruis::real(x), ruis::real(y)),
+							e.button.button == 1 ? ruis::mouse_button::left : ruis::mouse_button::right,
 							0
 						);
 				}else if(e.type == SDL_KEYDOWN || e.type == SDL_KEYUP){
@@ -437,7 +439,7 @@ int main( int argc, char* args[] ) {
 						gui.send_key(e.key.type == SDL_KEYDOWN, sdlScancodeToMordaKey(e.key.keysym.scancode));
 					}
 					if(e.type == SDL_KEYDOWN){
-						struct SDLUnicodeDummyProvider : public morda::gui::unicode_provider{
+						struct SDLUnicodeDummyProvider : public ruis::gui::input_string_provider{
 							std::u32string get()const override{
 								return std::u32string();
 							}
@@ -445,7 +447,7 @@ int main( int argc, char* args[] ) {
 						gui.send_character_input(SDLUnicodeDummyProvider(), sdlScancodeToMordaKey(e.key.keysym.scancode));
 					}
 				}else if( e.type == SDL_TEXTINPUT ) {
-					struct SDLUnicodeProvider : public morda::gui::unicode_provider{
+					struct SDLUnicodeProvider : public ruis::gui::input_string_provider{
 						char* text;
 						SDLUnicodeProvider(char* text) :
 								text(text)
@@ -454,7 +456,7 @@ int main( int argc, char* args[] ) {
 							return utki::to_utf32(this->text);
 						}
 					} sdlUnicodeProvider(e.text.text); // save pointer to text, the ownership of text buffer is not taken!!!
-					gui.send_character_input(sdlUnicodeProvider, morda::key::unknown);
+					gui.send_character_input(sdlUnicodeProvider, ruis::key::unknown);
 				}else if(e.type == userEventType){
 					std::unique_ptr<std::function<void()>> f(reinterpret_cast<std::function<void()>*>(e.user.data1));
 					f->operator ()();

@@ -6,23 +6,26 @@
 		{
 			"label": "build",
 			"type": "shell",
-			"command": "make autojobs=true",
+			"command": "make",
 			"problemMatcher": [
 				"$gcc"
-			]
+			],
+			"group": "build"
 		},
 		{
 			"label": "clean",
 			"type": "shell",
 			"command": "make clean",
-			"problemMatcher": []
+			"problemMatcher": [],
+			"group": "build"
 		},
 		{
 			"label": "run",
 			"type": "shell",
-			"command": "build/sdl2_example",
+			"command": "out/rel/sdl2_example",
 			"dependsOn": "build",
-			"problemMatcher": []
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }
