@@ -280,7 +280,7 @@ std::array<ruis::key, 0x100> keyMap = {{
 	ruis::key::unknown  // 255
 }};
 
-ruis::key sdlScancodeToMordaKey(SDL_Scancode sc){
+ruis::key sdl_scan_code_to_ruis_key(SDL_Scancode sc){
 	if(size_t(sc) >= keyMap.size()){
 		return ruis::key::unknown;
 	}
@@ -466,7 +466,7 @@ int main( int argc, char* args[] ) {
 						);
 				}else if(e.type == SDL_KEYDOWN || e.type == SDL_KEYUP){
 					if(e.key.repeat == 0){
-						gui.send_key(e.key.type == SDL_KEYDOWN, sdlScancodeToMordaKey(e.key.keysym.scancode));
+						gui.send_key(e.key.type == SDL_KEYDOWN, sdl_scan_code_to_ruis_key(e.key.keysym.scancode));
 					}
 					if(e.type == SDL_KEYDOWN){
 						struct SDLUnicodeDummyProvider : public ruis::gui::input_string_provider{
@@ -474,7 +474,7 @@ int main( int argc, char* args[] ) {
 								return std::u32string();
 							}
 						};
-						gui.send_character_input(SDLUnicodeDummyProvider(), sdlScancodeToMordaKey(e.key.keysym.scancode));
+						gui.send_character_input(SDLUnicodeDummyProvider(), sdl_scan_code_to_ruis_key(e.key.keysym.scancode));
 					}
 				}else if( e.type == SDL_TEXTINPUT ) {
 					struct SDLUnicodeProvider : public ruis::gui::input_string_provider{
