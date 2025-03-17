@@ -13,10 +13,12 @@
 #include <utki/unicode.hpp>
 
 #include <ruis/gui.hpp>
-#include <ruis/render/opengl/renderer.hpp>
+#include <ruis/render/opengl/context.hpp>
 #include <ruis/widget/label/text.hpp>
 #include <ruis/widget/button/push_button.hpp>
 #include <ruis/widget/label/rectangle.hpp>
+
+#include "gui.hpp"
 
 int width = 640;
 int height = 480;
@@ -343,25 +345,30 @@ int main( int argc, char* args[] ) {
 	// create ruis gui singleton
 	ruis::gui gui(
 		utki::make_shared<ruis::context>(
-			utki ::make_shared<ruis::render::opengl::renderer>(),
+			utki::make_shared<ruis::resource_loader>(
+				utki::make_shared<ruis::render::renderer>(
+					utki::make_shared<ruis::render::opengl::context>()
+				)
+			),
 			utki::make_shared<ruis::updater>(),
-			[userEventType](std::function<void()>&& f){
-				SDL_Event e;
-				SDL_memset(&e, 0, sizeof(e));
-				e.type = userEventType;
-				e.user.code = 0;
-				e.user.data1 = new std::function<void()>(std::move(f));
-				e.user.data2 = 0;
-				SDL_PushEvent(&e);
-			},
-			[](ruis::mouse_cursor){},
-			96,
-			1
+			ruis::context::parameters{
+				.post_to_ui_thread_function = [userEventType](std::function<void()> f){
+					SDL_Event e;
+					SDL_memset(&e, 0, sizeof(e));
+					e.type = userEventType;
+					e.user.code = 0;
+					e.user.data1 = new std::function<void()>(std::move(f));
+					e.user.data2 = 0;
+					SDL_PushEvent(&e);
+				},
+				.set_mouse_cursor_function = [](ruis::mouse_cursor){},
+				.units = ruis::units(96, 1)
+			}
 		)
 	);
 	
 	gui.set_viewport(ruis::vector2(ruis::real(width), ruis::real(height)));
-	gui.context.get().renderer.get().set_viewport(
+	gui.context.get().ren().render_context.get().set_viewport(
 		{{0, 0}, {unsigned(width), unsigned(height)}}
 	);
 	
@@ -386,7 +393,7 @@ int main( int argc, char* args[] ) {
 	// Inflate widgets hierarchy from GUI description script and set it up
 	{
 		fi.set_path("res/main.gui");
-		auto c = gui.context.get().inflater.inflate(fi);
+		auto c = make_root_widget(gui.context);
 
 		// set the widgets hierarchy to the application
 		gui.set_root(c);
@@ -410,7 +417,7 @@ int main( int argc, char* args[] ) {
 					tl->set_text("odd");
 				}
 			}
-			b.context.get().run_from_ui_thread([](){
+			b.context.get().post_to_ui_thread([](){
 				std::cout << "Hello from UI thread!" << std::endl;
 			});
 		};
@@ -438,7 +445,7 @@ int main( int argc, char* args[] ) {
 							height = e.window.data2;
 							// std::cout << "w = " << e.window.data1 << " h = " << e.window.data2 << std::endl;
 							gui.set_viewport(ruis::vector2(ruis::real(width), ruis::real(height)));
-							gui.context.get().renderer.get().set_viewport(
+							gui.context.get().ren().render_context.get().set_viewport(
 								{{0, 0}, {unsigned(width), unsigned(height)}}
 							);
 							// glViewport(0, 0, width, height);
@@ -495,8 +502,8 @@ int main( int argc, char* args[] ) {
 			}
 		}
 
-		gui.context.get().renderer.get().clear_framebuffer_color();
-		gui.render(gui.context.get().renderer.get().initial_matrix);
+		gui.context.get().ren().render_context.get().clear_framebuffer_color();
+		gui.render(gui.context.get().ren().render_context.get().initial_matrix);
 		
 		SDL_GL_SwapWindow(window); 
 	} 
