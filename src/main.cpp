@@ -345,9 +345,11 @@ int main( int argc, char* args[] ) {
 	// create ruis gui singleton
 	ruis::gui gui(
 		utki::make_shared<ruis::context>(
-			utki::make_shared<ruis::resource_loader>(
-				utki::make_shared<ruis::render::renderer>(
-					utki::make_shared<ruis::render::opengl::context>()
+			utki::make_shared<ruis::style_provider>(
+				utki::make_shared<ruis::resource_loader>(
+					utki::make_shared<ruis::render::renderer>(
+						utki::make_shared<ruis::render::opengl::context>()
+					)
 				)
 			),
 			utki::make_shared<ruis::updater>(),
