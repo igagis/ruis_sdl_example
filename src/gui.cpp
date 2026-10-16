@@ -8,6 +8,10 @@ using namespace std::string_literals;
 using namespace std::string_view_literals;
 using namespace ruis::length_literals;
 
+namespace {
+constexpr auto text_field_width = 200_pp;
+} // namespace
+
 namespace m {
 using namespace ruis::make;
 } // namespace m
@@ -45,7 +49,7 @@ utki::shared_ref<ruis::widget> make_root_widget(const utki::shared_ref<ruis::con
                     m::nine_patch_text_field(c,
                         {
                             .layout_params{
-                                .dims{200_pp, ruis::dim::min}
+                                .dims{text_field_width, ruis::dim::min}
                             },
                             .widget{
                                 .id = "text_input"s

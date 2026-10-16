@@ -13,14 +13,18 @@
 #include <ruis/widget/button/push_button.hpp>
 #include <ruis/widget/label/rectangle.hpp>
 #include <ruis/widget/label/text.hpp>
+#include <utki/log.hpp>
 #include <utki/unicode.hpp>
 
 #include "gui.hpp"
 
-int width = 640;
-int height = 480;
+namespace {
+constexpr int default_window_width = 640;
+constexpr int default_window_height = 480;
+constexpr int standard_dpi = 96;
+constexpr size_t scancode_count = 0x100;
 
-std::array<ruis::key, 0x100> keyMap = {
+std::array<ruis::key, scancode_count> const key_map = {
 	{
      ruis::key::unknown, // 0
 		ruis::key::unknown,
@@ -283,17 +287,24 @@ std::array<ruis::key, 0x100> keyMap = {
 
 ruis::key sdl_scan_code_to_ruis_key(SDL_Scancode sc)
 {
-	if (size_t(sc) >= keyMap.size()) {
+	if (size_t(sc) >= key_map.size()) {
 		return ruis::key::unknown;
 	}
 
-	return keyMap[sc];
+	return key_map[sc];
 }
+
+} // namespace
 
 int main(int argc, char* args[])
 {
+	int width = default_window_width;
+	int height = default_window_height;
+
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+		utki::log([&](auto& o) {
+			o << "SDL could not initialize! SDL_Error: " << SDL_GetError() << std::endl;
+		});
 		return 1;
 	}
 
@@ -314,8 +325,10 @@ int main(int argc, char* args[])
 		height,
 		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
 	);
-	if (window == NULL) {
-		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+	if (window == nullptr) {
+		utki::log([&](auto& o) {
+			o << "Window could not be created! SDL_Error: " << SDL_GetError() << std::endl;
+		});
 		return 1;
 	}
 
@@ -323,22 +336,24 @@ int main(int argc, char* args[])
 		SDL_DestroyWindow(window);
 	});
 
-	SDL_GLContext gContext = SDL_GL_CreateContext(window);
-	if (gContext == NULL) {
-		printf("OpenGL context could not be created! SDL Error: %s\n", SDL_GetError());
+	SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+	if (gl_context == nullptr) {
+		utki::log([&](auto& o) {
+			o << "OpenGL context could not be created! SDL Error: " << SDL_GetError() << std::endl;
+		});
 		return 1;
 	}
 
-	utki::scope_exit gl_scope_exit([&gContext]() {
-		SDL_GL_DeleteContext(gContext);
+	utki::scope_exit gl_scope_exit([&gl_context]() {
+		SDL_GL_DeleteContext(gl_context);
 	});
 
 	if (glewInit() != GLEW_OK) {
 		return 1;
 	}
 
-	Uint32 userEventType = SDL_RegisterEvents(1);
-	if (userEventType == ((Uint32)-1)) {
+	Uint32 user_event_type = SDL_RegisterEvents(1);
+	if (user_event_type == ((Uint32)-1)) {
 		return 1;
 	}
 
@@ -358,20 +373,23 @@ int main(int argc, char* args[])
 	// create ruis gui singleton
 	ruis::gui gui(utki::make_shared<ruis::context>(ruis::context::parameters{
 		.post_to_ui_thread_function =
-			[userEventType](std::function<void()> procedure) {
+			[user_event_type](std::function<void()> procedure) {
+				// NOLINTNEXTLINE(cppcoreguidelines-owning-memory, "the SDL C API has no way to pass a C++ callable through user events")
 				auto f = new std::function<void()>(std::move(procedure));
 				SDL_Event e;
 				SDL_zero(e);
-				e.type = userEventType;
+				e.type = user_event_type;
+				// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, "the SDL C API has no way to pass a C++ callable through user events")
 				e.user.data1 = reinterpret_cast<void*>(f);
 				if (SDL_PushEvent(&e) < 0) {
+					// NOLINTNEXTLINE(cppcoreguidelines-owning-memory, "the SDL C API has no way to pass a C++ callable through user events")
 					delete f;
 				}
 			},
 		.updater = utki::make_shared<ruis::updater>(),
 		.renderer = utki::make_shared<ruis::render::renderer>(rendering_context, common_shaders, common_render_objects),
 		.style_provider = std::move(ruis_style_provider),
-		.units = ruis::units(96, 1)
+		.units = ruis::units(standard_dpi, 1)
 	}));
 
 	gui.set_viewport(ruis::rect{
@@ -403,18 +421,18 @@ int main(int argc, char* args[])
 		// set the widgets hierarchy to the application
 		gui.set_root(c);
 
-		auto textLabel = c.get().try_get_widget_as<ruis::text>("info_text");
-		utki::assert(textLabel, SL);
+		auto text_label = c.get().try_get_widget_as<ruis::text>("info_text");
+		utki::assert(text_label, SL);
 
 		auto button = c.get().try_get_widget_as<ruis::push_button>("hw_button");
 
-		auto textLabelWeak = utki::make_weak(textLabel); //make a weak pointer to the TextLabel widget.
+		auto text_label_weak = utki::make_weak(text_label); //make a weak pointer to the TextLabel widget.
 
 		bool even = true;
 
 		// connect some action on button click
-		button->click_handler = [textLabelWeak, even](ruis::push_button& b) mutable {
-			if (auto tl = textLabelWeak.lock()) {
+		button->click_handler = [text_label_weak, even](ruis::push_button& b) mutable {
+			if (auto tl = text_label_weak.lock()) {
 				even = !even;
 				if (even) {
 					tl->set_string("even");
@@ -435,7 +453,7 @@ int main(int argc, char* args[])
 	});
 
 	for (bool quit = false; !quit;) {
-		if (SDL_WaitEventTimeout(nullptr, gui.context.get().updater.get().update()) == 1) {
+		if (SDL_WaitEventTimeout(nullptr, static_cast<int>(gui.context.get().updater.get().update())) == 1) {
 			SDL_Event e;
 			while (SDL_PollEvent(&e) != 0) {
 				if (e.type == SDL_QUIT) {
@@ -485,23 +503,23 @@ int main(int argc, char* args[])
 						);
 					}
 					if (e.type == SDL_KEYDOWN) {
-						struct SDLUnicodeDummyProvider : public ruis::gui::input_string_provider {
+						struct sdl_unicode_dummy_provider : public ruis::gui::input_string_provider {
 							std::u32string get() const override
 							{
-								return std::u32string();
+								return {};
 							}
 						};
 
 						gui.send_character_input(
-							SDLUnicodeDummyProvider(),
+							sdl_unicode_dummy_provider(),
 							sdl_scan_code_to_ruis_key(e.key.keysym.scancode)
 						);
 					}
 				} else if (e.type == SDL_TEXTINPUT) {
-					struct SDLUnicodeProvider : public ruis::gui::input_string_provider {
+					struct sdl_unicode_provider : public ruis::gui::input_string_provider {
 						char* text;
 
-						SDLUnicodeProvider(char* text) :
+						sdl_unicode_provider(char* text) :
 							text(text)
 						{}
 
@@ -509,11 +527,12 @@ int main(int argc, char* args[])
 						{
 							return utki::to_utf32(this->text);
 						}
-					} sdlUnicodeProvider(e.text.text
+					} unicode_provider(&e.text.text[0]
 					); // save pointer to text, the ownership of text buffer is not taken!!!
 
-					gui.send_character_input(sdlUnicodeProvider, ruis::key::unknown);
-				} else if (e.type == userEventType) {
+					gui.send_character_input(unicode_provider, ruis::key::unknown);
+				} else if (e.type == user_event_type) {
+					// NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, "the SDL C API has no way to pass a C++ callable through user events")
 					std::unique_ptr<std::function<void()>> f(reinterpret_cast<std::function<void()>*>(e.user.data1));
 					f->operator()();
 				}
